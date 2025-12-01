@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Nouma</string>
+
+    <!-- Welcome Screen -->
+    <string name="welcome_title">Nouma</string>
+    <string name="welcome_subtitle">Hi! Are you ready to chat without limits?</string>
+    <string name="welcome_button_text">Next</string>
+    <string name="login_signin_text">Login\nSign in</string>
+    <string name="ls_des">Don\'t have an account yet? Tap that huge plus button</string>
+</resources>
