@@ -6,5 +6,17 @@
     <string name="welcome_subtitle">Hi! Are you ready to chat without limits?</string>
     <string name="welcome_button_text">Next</string>
     <string name="login_signin_text">Login\nSign in</string>
-    <string name="ls_des">Don\'t have an account yet? Tap that huge plus button</string>
+    <string name="ls_des">Don\'t have an account yet? Press that huge button with the plus</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Login</string>
+    <string name="login_username_hint">Username or email</string>
+    <string name="login_password_hint">Password</string>
+
+    <!-- Register Screen -->
+    <string name="register_title">Register</string>
+    <string name="register_username_hint">Username</string>
+    <string name="register_email_hint">Email</string>
+    <string name="register_password_hint">Password</string>
+    <string name="register_confirm_password_hint">Confirm password</string>
 </resources>

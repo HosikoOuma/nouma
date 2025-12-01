@@ -9,21 +9,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Login
-import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.nkds.hosikoouma.nouma.R
@@ -31,51 +34,29 @@ import com.nkds.hosikoouma.nouma.ui.theme.NoumaTheme
 import com.nkds.hosikoouma.nouma.utils.performVibration
 
 @Composable
-fun AuthScreen(
-    onLoginClick: () -> Unit = {},
-    onRegisterClick: () -> Unit = {}
-) {
+fun LoginScreen() {
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     val context = LocalContext.current
-    val vibrate: () -> Unit = {
-        performVibration(context)
-    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         floatingActionButton = {
-            Column(horizontalAlignment = Alignment.End) {
-                //кнопка для входа в аккаунт
-                Button(
-                    onClick = {
-                        onLoginClick()
-                        vibrate()
-                    },
-                    modifier = Modifier.size(160.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Login,
-                        contentDescription = "Login",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                //кнопка для регистрации
-                Button(
-                    onClick = {
-                        onRegisterClick()
-                        vibrate()
-                    },
-                    modifier = Modifier.size(160.dp),
-                    shape = RoundedCornerShape(24.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Sign up",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
+            Button(
+                onClick = {
+                    performVibration(context)
+                    // TODO: Handle login logic
+                },
+                modifier = Modifier.size(160.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Login,
+                    contentDescription = stringResource(id = R.string.login_title),
+                    modifier = Modifier.size(32.dp)
+                )
             }
-        }
+        },
+        floatingActionButtonPosition = androidx.compose.material3.FabPosition.End
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -90,19 +71,28 @@ fun AuthScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = stringResource(id = R.string.login_signin_text),
+                    text = stringResource(id = R.string.login_title),
                     style = MaterialTheme.typography.headlineLarge
                 )
                 Icon(
-                    imageVector = Icons.Outlined.Key,
+                    imageVector = Icons.Default.Login,
                     contentDescription = null,
                     modifier = Modifier.size(48.dp)
                 )
             }
             Spacer(modifier = Modifier.height(64.dp))
-            Text(
-                text = stringResource(id = R.string.ls_des),
-                style = MaterialTheme.typography.bodyLarge,
+            OutlinedTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text(stringResource(id = R.string.login_username_hint)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text(stringResource(id = R.string.login_password_hint)) },
+                visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -111,8 +101,8 @@ fun AuthScreen(
 
 @Preview(showBackground = true)
 @Composable
-private fun AuthScreenPreview() {
+private fun LoginScreenPreview() {
     NoumaTheme {
-        AuthScreen()
+        LoginScreen()
     }
 }

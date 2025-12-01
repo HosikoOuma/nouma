@@ -7,4 +7,16 @@
     <string name="welcome_button_text">Вперёд</string>
     <string name="login_signin_text">Вход\nРегистрация</string>
     <string name="ls_des">Ещё нет аккаунта? Нажми вот ту огромную кнопку с плюсом</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Вход</string>
+    <string name="login_username_hint">Имя пользователя или почта</string>
+    <string name="login_password_hint">Пароль</string>
+
+    <!-- Register Screen -->
+    <string name="register_title">Регистрация</string>
+    <string name="register_username_hint">Имя пользователя</string>
+    <string name="register_email_hint">Электронная почта</string>
+    <string name="register_password_hint">Пароль</string>
+    <string name="register_confirm_password_hint">Подтвердите пароль</string>
 </resources>

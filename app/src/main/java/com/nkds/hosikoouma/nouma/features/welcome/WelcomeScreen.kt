@@ -94,8 +94,10 @@ fun WelcomeScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = { onNextClick()
-                    vibrate() },
+                onClick = {
+                    onNextClick()
+                    vibrate()
+                },
                 modifier = Modifier.padding(bottom = 32.dp).size(width = 220.dp, height = 56.dp)
             ) {
                 Text(text = stringResource(id = R.string.welcome_button_text))
