@@ -19,4 +19,84 @@
     <string name="register_email_hint">Электронная почта</string>
     <string name="register_password_hint">Пароль</string>
     <string name="register_confirm_password_hint">Подтвердите пароль</string>
+
+    <!-- Validation Errors -->
+    <string name="error_passwords_do_not_match">Пароли не совпадают</string>
+    <string name="error_fields_cannot_be_empty">Все поля должны быть заполнены</string>
+    <string name="error_username_taken">Это имя пользователя уже занято</string>
+    <string name="error_email_taken">Эта почта уже занята</string>
+    <string name="error_user_not_found">Пользователь не найден или это вы</string>
+
+    <!-- Delete Confirmation -->
+    <string name="delete_confirmation_title">Удалить?</string>
+    <string name="delete_confirmation_message">Это действие нельзя будет отменить</string>
+    <string name="action_delete">Удалить</string>
+    <string name="action_cancel">Отмена</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Настройки</string>
+    <string name="settings_theme">Тема</string>
+    <string name="settings_font">Шрифт</string>
+    <string name="settings_language">Язык</string>
+    <string name="settings_logout">Выйти</string>
+    <string name="settings_edit">Редактировать</string>
+    <string name="settings_save">Сохранить</string>
+    <string name="settings_avatar">Аватар</string>
+    <string name="settings_nickname">Никнейм</string>
+    <string name="settings_username_login">Имя пользователя (логин)</string>
+    <string name="settings_email">Электронная почта</string>
+    <string name="settings_bio">Биография</string>
+    <string name="settings_no_bio">Нет биографии</string>
+    <string name="settings_chat_background">Фон чата</string>
+    <string name="settings_chat_background_default">По умолчанию</string>
+    <string name="settings_chat_background_gallery">Выбрать из галереи</string>
+    <string name="settings_chat_background_updated">Фон чата обновлен</string>
+    <string name="settings_developer">Разработчик</string>
+    <string name="developer_name">HosikoOuma</string>
+    <string name="developer_telegram">@NekoDosi</string>
+    <string name="theme_system">Системная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="theme_amoled">AMOLED</string>
+    <string name="font_system">Системный</string>
+    <string name="font_google_sans">Google Sans</string>
+    <string name="font_jetbrains_mono">JetBrains Mono</string>
+    <string name="language_system">Системный</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_english">Английский</string>
+
+    <!-- Chats Screen -->
+    <string name="chats_selected_count">Выбрано: %d</string>
+    <string name="new_chat_dialog_title">Начать новый чат</string>
+    <string name="new_chat_dialog_username">Имя пользователя</string>
+    <string name="new_chat_dialog_create">Создать</string>
+    <string name="chat_media_type_photo">Фото</string>
+    <string name="chat_media_type_video">Видео</string>
+    <string name="chat_media_type_file">Файл</string>
+    <string name="chat_media_type_music">Музыка</string>
+    <string name="chat_media_type_voice">Голосовое сообщение</string>
+    <string name="chat_no_messages">Нет сообщений</string>
+    <string name="time_yesterday">Вчера</string>
+
+    <!-- Contacts Screen -->
+    <string name="contacts_permission_rationale">Чтение контактов необходимо, чтобы найти ваших друзей в Nouma. Пожалуйста, предоставьте разрешение.</string>
+    <string name="contacts_permission_request">Нам нужно разрешение на чтение контактов для отображения вашего списка друзей.</string>
+    <string name="contacts_grant_permission">Дать разрешение</string>
+
+    <!-- Bottom Navigation -->
+    <string name="bottom_nav_chats">Чаты</string>
+    <string name="bottom_nav_contacts">Контакты</string>
+    <string name="bottom_nav_settings">Настройки</string>
+
+    <!-- Conversation Screen -->
+    <string name="conversation_back">Назад</string>
+    <string name="conversation_message_hint">Сообщение</string>
+    <string name="conversation_send">Отправить</string>
+    <string name="attachment_media">Медиа</string>
+    <string name="attachment_file">Файл</string>
+    <string name="attachment_music">Музыка</string>
+    <string name="attachment_camera">Камера</string>
+    <string name="voice_message_hold_to_record">Удерживайте для записи</string>
+    <string name="voice_message_recording">Запись...</string>
+
 </resources>

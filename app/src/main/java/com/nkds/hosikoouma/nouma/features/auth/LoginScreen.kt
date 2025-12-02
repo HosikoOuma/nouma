@@ -1,5 +1,9 @@
 package com.nkds.hosikoouma.nouma.features.auth
 
+import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +22,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,26 +40,57 @@ import com.nkds.hosikoouma.nouma.ui.theme.NoumaTheme
 import com.nkds.hosikoouma.nouma.utils.performVibration
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(
+    authViewModel: AuthViewModel,
+    onLoginSuccess: () -> Unit
+) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
+    val authState by authViewModel.authState.collectAsState()
+
+    val isButtonVisible = username.isNotBlank() && password.isNotBlank()
+
+    LaunchedEffect(authState) {
+        when (val state = authState) {
+            is AuthState.Error -> {
+                Toast.makeText(context, context.getString(state.messageResId), Toast.LENGTH_SHORT).show()
+                authViewModel.resetAuthState()
+            }
+            is AuthState.ErrorString -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                authViewModel.resetAuthState()
+            }
+            is AuthState.Success -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                authViewModel.resetAuthState()
+                onLoginSuccess()
+            }
+            is AuthState.Idle -> {}
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         floatingActionButton = {
-            Button(
-                onClick = {
-                    performVibration(context)
-                    // TODO: Handle login logic
-                },
-                modifier = Modifier.size(160.dp)
+            AnimatedVisibility(
+                visible = isButtonVisible,
+                enter = slideInHorizontally(initialOffsetX = { it }),
+                exit = slideOutHorizontally(targetOffsetX = { it })
             ) {
-                Icon(
-                    imageVector = Icons.Default.Login,
-                    contentDescription = stringResource(id = R.string.login_title),
-                    modifier = Modifier.size(32.dp)
-                )
+                Button(
+                    onClick = {
+                        performVibration(context)
+                        authViewModel.loginUser(username, password)
+                    },
+                    modifier = Modifier.size(160.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Login,
+                        contentDescription = stringResource(id = R.string.login_title),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
             }
         },
         floatingActionButtonPosition = androidx.compose.material3.FabPosition.End
@@ -64,7 +101,7 @@ fun LoginScreen() {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Spacer(modifier = Modifier.height(128.dp))
+            Spacer(modifier = Modifier.height(128.dp))            //GEMINI НЕ ТРОГАЙ
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -80,12 +117,13 @@ fun LoginScreen() {
                     modifier = Modifier.size(48.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height(64.dp))            //GEMINI НЕ ТРОГАЙ
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
                 label = { Text(stringResource(id = R.string.login_username_hint)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
@@ -93,7 +131,8 @@ fun LoginScreen() {
                 onValueChange = { password = it },
                 label = { Text(stringResource(id = R.string.login_password_hint)) },
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
         }
     }
@@ -103,6 +142,6 @@ fun LoginScreen() {
 @Composable
 private fun LoginScreenPreview() {
     NoumaTheme {
-        LoginScreen()
+        // LoginScreen(viewModel(), {})
     }
 }

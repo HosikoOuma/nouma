@@ -19,4 +19,84 @@
     <string name="register_email_hint">Email</string>
     <string name="register_password_hint">Password</string>
     <string name="register_confirm_password_hint">Confirm password</string>
+
+    <!-- Validation Errors -->
+    <string name="error_passwords_do_not_match">Passwords do not match</string>
+    <string name="error_fields_cannot_be_empty">All fields must be filled</string>
+    <string name="error_username_taken">This username is already taken</string>
+    <string name="error_email_taken">This email is already registered</string>
+    <string name="error_user_not_found">User not found or it\'s you</string>
+
+    <!-- Delete Confirmation -->
+    <string name="delete_confirmation_title">Delete?</string>
+    <string name="delete_confirmation_message">This action cannot be undone</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_font">Font</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_logout">Logout</string>
+    <string name="settings_edit">Edit</string>
+    <string name="settings_save">Save</string>
+    <string name="settings_avatar">Avatar</string>
+    <string name="settings_nickname">Nickname</string>
+    <string name="settings_username_login">Username (login)</string>
+    <string name="settings_email">Email</string>
+    <string name="settings_bio">Biography</string>
+    <string name="settings_no_bio">No biography</string>
+    <string name="settings_chat_background">Chat background</string>
+    <string name="settings_chat_background_default">Default</string>
+    <string name="settings_chat_background_gallery">Choose from Gallery</string>
+    <string name="settings_chat_background_updated">Chat background updated</string>
+    <string name="settings_developer">Developer</string>
+    <string name="developer_name">HosikoOuma</string>
+    <string name="developer_telegram">@NekoDosi</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_amoled">AMOLED</string>
+    <string name="font_system">System</string>
+    <string name="font_google_sans">Google Sans</string>
+    <string name="font_jetbrains_mono">JetBrains Mono</string>
+    <string name="language_system">System</string>
+    <string name="language_russian">Russian</string>
+    <string name="language_english">English</string>
+
+    <!-- Chats Screen -->
+    <string name="chats_selected_count">Selected: %d</string>
+    <string name="new_chat_dialog_title">Start new chat</string>
+    <string name="new_chat_dialog_username">Username</string>
+    <string name="new_chat_dialog_create">Create</string>
+    <string name="chat_media_type_photo">Photo</string>
+    <string name="chat_media_type_video">Video</string>
+    <string name="chat_media_type_file">File</string>
+    <string name="chat_media_type_music">Music</string>
+    <string name="chat_media_type_voice">Voice message</string>
+    <string name="chat_no_messages">No messages</string>
+    <string name="time_yesterday">Yesterday</string>
+
+    <!-- Contacts Screen -->
+    <string name="contacts_permission_rationale">Reading contacts is required to find your friends on Nouma. Please grant the permission.</string>
+    <string name="contacts_permission_request">We need permission to read your contacts to display your friends list.</string>
+    <string name="contacts_grant_permission">Grant Permission</string>
+
+    <!-- Bottom Navigation -->
+    <string name="bottom_nav_chats">Chats</string>
+    <string name="bottom_nav_contacts">Contacts</string>
+    <string name="bottom_nav_settings">Settings</string>
+
+    <!-- Conversation Screen -->
+    <string name="conversation_back">Back</string>
+    <string name="conversation_message_hint">Message</string>
+    <string name="conversation_send">Send</string>
+    <string name="attachment_media">Media</string>
+    <string name="attachment_file">File</string>
+    <string name="attachment_music">Music</string>
+    <string name="attachment_camera">Camera</string>
+    <string name="voice_message_hold_to_record">Hold to record</string>
+    <string name="voice_message_recording">Recording...</string>
+
 </resources>
