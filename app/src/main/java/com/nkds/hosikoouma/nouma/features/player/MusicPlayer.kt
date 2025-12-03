@@ -75,6 +75,9 @@ fun MusicPlayer(
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == Player.STATE_READY) {
                     totalDuration = exoPlayer.duration
+                } else if (playbackState == Player.STATE_ENDED) {
+                    sliderPosition = totalDuration.toFloat()
+                    currentTime = totalDuration
                 }
             }
         }
@@ -88,7 +91,7 @@ fun MusicPlayer(
         while (isPlaying && !isSeeking) {
             currentTime = exoPlayer.currentPosition
             sliderPosition = currentTime.toFloat()
-            delay(1000)
+            delay(10)
         }
     }
 
@@ -164,7 +167,14 @@ fun MusicPlayer(
         ){
             IconButton(
                 onClick = {
-                    if (exoPlayer.isPlaying) exoPlayer.pause() else exoPlayer.play()
+                    if (exoPlayer.isPlaying) {
+                        exoPlayer.pause()
+                    } else {
+                        if (exoPlayer.playbackState == Player.STATE_ENDED) {
+                            exoPlayer.seekTo(0L)
+                        }
+                        exoPlayer.play()
+                    }
                 },
                 modifier = Modifier.size(64.dp)
             ) {

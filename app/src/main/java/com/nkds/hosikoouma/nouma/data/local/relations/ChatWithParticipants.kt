@@ -19,5 +19,6 @@ data class ChatWithParticipants(
             entityColumn = "userId"
         )
     )
-    val participants: List<User>
+    val participants: List<User>,
+    val unreadMessageCount: Int = 0
 )

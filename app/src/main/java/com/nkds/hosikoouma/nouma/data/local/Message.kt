@@ -12,5 +12,6 @@ data class Message(
     val text: String?,
     val timestamp: Long = System.currentTimeMillis(),
     val type: MessageType,
-    val fileName: String? = null // Имя файла для типа FILE
+    val fileName: String? = null, // Имя файла для типа FILE
+    val isRead: Boolean = false
 )

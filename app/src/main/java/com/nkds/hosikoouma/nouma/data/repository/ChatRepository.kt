@@ -47,7 +47,8 @@ class ChatRepository(private val userDao: UserDao, private val chatDao: ChatDao,
                     chatId = chatWithParticipants.chat.chatId,
                     opponentName = it.nickname ?: it.username,
                     lastMessage = lastMessage,
-                    opponentAvatarUri = it.avatarUri
+                    opponentAvatarUri = it.avatarUri,
+                    unreadMessageCount = chatWithParticipants.unreadMessageCount
                 )
             }
         }

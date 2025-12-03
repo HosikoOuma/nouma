@@ -28,7 +28,7 @@ import com.nkds.hosikoouma.nouma.utils.createAvatarImageRequest
 import com.nkds.hosikoouma.nouma.utils.formatTimestamp
 import kotlinx.coroutines.flow.collectLatest
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ChatItem(chat: ChatUiState, isSelected: Boolean, onItemClick: (Int) -> Unit, onItemLongClick: (Int) -> Unit) {
     val context = LocalContext.current
@@ -66,8 +66,14 @@ fun ChatItem(chat: ChatUiState, isSelected: Boolean, onItemClick: (Int) -> Unit,
                 }
                 Text(text = lastMessageText ?: "", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            if (chat.lastMessage != null) {
-                Text(text = formatTimestamp(context, chat.lastMessage.timestamp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(horizontalAlignment = Alignment.End) {
+                if (chat.lastMessage != null) {
+                    Text(text = formatTimestamp(context, chat.lastMessage.timestamp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                if (chat.unreadMessageCount > 0) {
+                    Badge(modifier = Modifier.size(24.dp)) { Text(text = chat.unreadMessageCount.toString()) }
+                }
             }
         }
     }

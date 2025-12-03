@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -82,7 +82,7 @@ fun LoginScreen(
                     modifier = Modifier.size(160.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Login,
+                        imageVector = Icons.AutoMirrored.Filled.Login,
                         contentDescription = stringResource(id = R.string.login_title),
                         modifier = Modifier.size(32.dp)
                     )
@@ -108,7 +108,7 @@ fun LoginScreen(
                     style = MaterialTheme.typography.headlineLarge
                 )
                 Icon(
-                    imageVector = Icons.Default.Login,
+                    imageVector = Icons.AutoMirrored.Filled.Login,
                     contentDescription = stringResource(R.string.cd_login_icon),
                     modifier = Modifier.size(48.dp)
                 )

@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 
-@Database(entities = [User::class, Chat::class, Message::class, ChatParticipant::class], version = 11, exportSchema = false)
+@Database(entities = [User::class, Chat::class, Message::class, ChatParticipant::class], version = 12, exportSchema = false)
 @TypeConverters(AppDatabase.Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 

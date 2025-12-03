@@ -16,11 +16,21 @@ interface ChatDao {
     suspend fun insertParticipant(participant: ChatParticipant)
 
     @Transaction
-    @Query("SELECT * FROM chats WHERE chatId IN (SELECT chatId FROM chat_participants WHERE userId = :userId)")
+    @Query("""
+        SELECT c.*, (
+            SELECT COUNT(*) FROM messages
+            WHERE chatId = c.chatId AND isRead = 0 AND senderId != :userId
+        ) as unreadMessageCount
+        FROM chats c
+        LEFT JOIN messages m ON c.chatId = m.chatId
+        WHERE c.chatId IN (SELECT chatId FROM chat_participants WHERE userId = :userId)
+        GROUP BY c.chatId
+        ORDER BY MAX(m.timestamp) DESC
+    """)
     suspend fun getUserChats(userId: Int): List<ChatWithParticipants>
 
     @Transaction
-    @Query("SELECT * FROM chats WHERE chatId = :chatId")
+    @Query("SELECT *, 0 as unreadMessageCount FROM chats WHERE chatId = :chatId")
     suspend fun getChatWithParticipants(chatId: Int): ChatWithParticipants?
 
     @Query("""

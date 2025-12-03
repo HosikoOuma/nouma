@@ -26,4 +26,7 @@ interface MessageDao {
 
     @Update
     suspend fun updateMessage(message: Message)
+
+    @Query("UPDATE messages SET isRead = 1 WHERE chatId = :chatId AND senderId != :currentUserId AND isRead = 0")
+    suspend fun markMessagesAsRead(chatId: Int, currentUserId: Int)
 }

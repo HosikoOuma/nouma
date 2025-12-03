@@ -55,6 +55,13 @@ class ConversationViewModel(
 
     init {
         loadOpponent()
+        markMessagesAsRead()
+    }
+
+    private fun markMessagesAsRead() {
+        viewModelScope.launch {
+            repository.markMessagesAsRead(chatId, currentUserId)
+        }
     }
 
     fun toggleMessageSelection(messageId: Int) {

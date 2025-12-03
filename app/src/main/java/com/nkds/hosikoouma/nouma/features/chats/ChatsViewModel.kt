@@ -17,7 +17,8 @@ data class ChatUiState(
     val chatId: Int,
     val opponentName: String,
     val lastMessage: Message?,
-    val opponentAvatarUri: String?
+    val opponentAvatarUri: String?,
+    val unreadMessageCount: Int
 )
 
 sealed class NewChatResult {

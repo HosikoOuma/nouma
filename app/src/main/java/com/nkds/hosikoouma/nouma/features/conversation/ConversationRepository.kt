@@ -95,4 +95,8 @@ class ConversationRepository(
     suspend fun updateMessage(message: Message) {
         messageDao.updateMessage(message)
     }
+
+    suspend fun markMessagesAsRead(chatId: Int, currentUserId: Int) {
+        messageDao.markMessagesAsRead(chatId, currentUserId)
+    }
 }
