@@ -23,7 +23,14 @@ data class SettingsUiState(
     val error: String? = null,
     val selectedTheme: Theme = Theme.SYSTEM,
     val selectedFont: FontChoice = FontChoice.SYSTEM,
-    val selectedLanguage: Language = Language.SYSTEM
+    val selectedLanguage: Language = Language.SYSTEM,
+
+    // Temporary state for editing
+    val tempNickname: String = "",
+    val tempUsername: String = "",
+    val tempEmail: String = "",
+    val tempBio: String = "",
+    val tempAvatarUri: Uri? = null
 )
 
 class SettingsViewModel(
@@ -53,7 +60,8 @@ class SettingsViewModel(
         viewModelScope.launch {
             val userId = sessionManager.getUserId()
             if (userId != -1) {
-                _uiState.update { it.copy(user = userRepository.getUserById(userId)) }
+                val user = userRepository.getUserById(userId)
+                _uiState.update { it.copy(user = user) }
             }
         }
     }
@@ -71,45 +79,79 @@ class SettingsViewModel(
     fun onLanguageChange(language: Language) {
         settingsRepository.setLanguage(language)
         _uiState.update { it.copy(selectedLanguage = language) }
-        setAppLocale(language) // <-- ВОТ ИСПРАВЛЕНИЕ
+        setAppLocale(language)
     }
 
     fun onEdit() {
-        _uiState.update { it.copy(isEditing = true) }
+        _uiState.value.user?.let {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    isEditing = true,
+                    tempNickname = it.nickname ?: it.username,
+                    tempUsername = it.username,
+                    tempEmail = it.email,
+                    tempBio = it.bio ?: "",
+                    tempAvatarUri = null
+                )
+            }
+        }
     }
 
     fun onCancel() {
-        loadCurrentUser()
         _uiState.update { it.copy(isEditing = false, error = null) }
     }
 
-    fun onSave(nickname: String, username: String, email: String, bio: String, avatarUri: Uri?) {
-        val currentUser = _uiState.value.user ?: return
+    fun onSave() {
+        val state = _uiState.value
+        val currentUser = state.user ?: return
 
         viewModelScope.launch {
-            val existingUserByUsername = userRepository.getUserByUsername(username)
+            val existingUserByUsername = userRepository.getUserByUsername(state.tempUsername)
             if (existingUserByUsername != null && existingUserByUsername.id != currentUser.id) {
                 _uiState.update { it.copy(error = "Это имя пользователя уже занято") }
                 return@launch
             }
 
-            val existingUserByEmail = userRepository.getUserByEmail(email)
+            val existingUserByEmail = userRepository.getUserByEmail(state.tempEmail)
             if (existingUserByEmail != null && existingUserByEmail.id != currentUser.id) {
                 _uiState.update { it.copy(error = "Эта почта уже занята") }
                 return@launch
             }
 
             val updatedUser = currentUser.copy(
-                nickname = nickname,
-                username = username,
-                email = email,
-                bio = bio,
-                avatarUri = avatarUri?.toString() ?: currentUser.avatarUri
+                nickname = state.tempNickname,
+                username = state.tempUsername,
+                email = state.tempEmail,
+                bio = state.tempBio,
+                avatarUri = state.tempAvatarUri?.toString() ?: currentUser.avatarUri
             )
 
             userRepository.updateUser(updatedUser)
             _uiState.update { it.copy(user = updatedUser, isEditing = false, error = null) }
         }
+    }
+    
+    fun onTempNicknameChanged(nickname: String) {
+        _uiState.update { it.copy(tempNickname = nickname) }
+    }
+    fun onTempUsernameChanged(username: String) {
+        _uiState.update { it.copy(tempUsername = username) }
+    }
+    fun onTempEmailChanged(email: String) {
+        _uiState.update { it.copy(tempEmail = email) }
+    }
+    fun onTempBioChanged(bio: String) {
+        _uiState.update { it.copy(tempBio = bio) }
+    }
+    fun onTempAvatarUriChanged(uri: Uri?) {
+        _uiState.update { it.copy(tempAvatarUri = uri) }
+    }
+
+    fun onLogout() {
+        // Reset all state to default
+        _uiState.value = SettingsUiState()
+        // Reload initial settings that are not user-specific
+        loadInitialSettings()
     }
 
     fun clearError() {

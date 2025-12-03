@@ -67,7 +67,7 @@ fun WelcomeScreen(
 
             Icon(
                 imageVector = Icons.Default.Favorite,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.cd_welcome_heart),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .size(128.dp)

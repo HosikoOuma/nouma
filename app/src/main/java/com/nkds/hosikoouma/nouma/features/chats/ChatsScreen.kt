@@ -5,24 +5,10 @@ import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.nkds.hosikoouma.nouma.R
 import com.nkds.hosikoouma.nouma.data.local.MessageType
+import com.nkds.hosikoouma.nouma.utils.createAvatarImageRequest
 import com.nkds.hosikoouma.nouma.utils.formatTimestamp
 import kotlinx.coroutines.flow.collectLatest
 
@@ -55,7 +42,7 @@ fun ChatItem(chat: ChatUiState, isSelected: Boolean, onItemClick: (Int) -> Unit,
             Box(modifier = Modifier.size(56.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer), contentAlignment = Alignment.Center) {
                 if (chat.opponentAvatarUri != null) {
                     AsyncImage(
-                        model = Uri.parse(chat.opponentAvatarUri),
+                        model = createAvatarImageRequest(context, Uri.parse(chat.opponentAvatarUri)),
                         contentDescription = chat.opponentName,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
@@ -86,7 +73,6 @@ fun ChatItem(chat: ChatUiState, isSelected: Boolean, onItemClick: (Int) -> Unit,
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewChatDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     var username by remember { mutableStateOf("") }
@@ -101,12 +87,16 @@ fun NewChatDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatsScreen(chatsViewModel: ChatsViewModel, onChatClick: (Int) -> Unit) {
+fun ChatsScreen(
+    chatsViewModel: ChatsViewModel, 
+    showNewChatDialog: Boolean,
+    setShowNewChatDialog: (Boolean) -> Unit,
+    onChatClick: (Int) -> Unit
+) {
     val chats by chatsViewModel.chatsState.collectAsState()
     val selectedIds by chatsViewModel.selectedChatIds.collectAsState()
     val isSelectionMode = selectedIds.isNotEmpty()
     val showDeleteDialog by chatsViewModel.showDeleteConfirmation.collectAsState()
-    var showNewChatDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
@@ -121,10 +111,10 @@ fun ChatsScreen(chatsViewModel: ChatsViewModel, onChatClick: (Int) -> Unit) {
 
     if (showNewChatDialog) {
         NewChatDialog(
-            onDismiss = { showNewChatDialog = false },
+            onDismiss = { setShowNewChatDialog(false) },
             onConfirm = { username ->
                 chatsViewModel.onFindUserClick(username)
-                showNewChatDialog = false
+                setShowNewChatDialog(false)
             }
         )
     }
@@ -144,34 +134,15 @@ fun ChatsScreen(chatsViewModel: ChatsViewModel, onChatClick: (Int) -> Unit) {
             }
         }
     }
-
-    Scaffold(
-        topBar = {
-            if (isSelectionMode) {
-                TopAppBar(
-                    title = { Text(stringResource(R.string.chats_selected_count, selectedIds.size)) },
-                    navigationIcon = { IconButton(onClick = { chatsViewModel.clearSelections() }) { Icon(Icons.Default.ArrowBack, contentDescription = stringResource(id = R.string.action_cancel)) } },
-                    actions = { IconButton(onClick = { chatsViewModel.requestDeletion() }) { Icon(Icons.Default.Delete, contentDescription = stringResource(id = R.string.action_delete)) } }
-                )
-            }
-        },
-        floatingActionButton = {
-            if (!isSelectionMode) {
-                FloatingActionButton(onClick = { showNewChatDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.new_chat_dialog_title))
-                }
-            }
-        }
-    ) { innerPadding ->
-        LazyColumn(modifier = Modifier.fillMaxSize().padding(innerPadding), contentPadding = PaddingValues(vertical = 8.dp)) {
-            items(chats, key = { it.chatId }) { chat ->
-                ChatItem(
-                    chat = chat,
-                    isSelected = selectedIds.contains(chat.chatId),
-                    onItemClick = { if (isSelectionMode) chatsViewModel.toggleChatSelection(it) else onChatClick(it) },
-                    onItemLongClick = { chatsViewModel.toggleChatSelection(it) }
-                )
-            }
+    
+    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 8.dp)) {
+        items(chats, key = { it.chatId }) { chat ->
+            ChatItem(
+                chat = chat,
+                isSelected = selectedIds.contains(chat.chatId),
+                onItemClick = { if (isSelectionMode) chatsViewModel.toggleChatSelection(it) else onChatClick(it) },
+                onItemLongClick = { chatsViewModel.toggleChatSelection(it) }
+            )
         }
     }
 }

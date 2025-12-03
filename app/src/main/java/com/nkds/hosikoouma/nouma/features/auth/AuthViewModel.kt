@@ -4,17 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.nkds.hosikoouma.nouma.R
-import com.nkds.hosikoouma.nouma.data.FontChoice
-import com.nkds.hosikoouma.nouma.data.Theme
 import com.nkds.hosikoouma.nouma.data.local.User
 import com.nkds.hosikoouma.nouma.data.repository.AuthRepository
 import com.nkds.hosikoouma.nouma.data.repository.ChatRepository
-import com.nkds.hosikoouma.nouma.data.repository.SettingsRepository
 import com.nkds.hosikoouma.nouma.utils.SecurityUtils
 import com.nkds.hosikoouma.nouma.utils.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
@@ -55,9 +51,9 @@ class AuthViewModel(
                 
                 chatRepository.createInitialChatsForUser(newUserId)
 
-                _authState.value = AuthState.Success("Регистрация прошла успешно!") // Эта строка для Toast, оставим пока
+                _authState.value = AuthState.Success(R.string.auth_success_register)
             } catch (e: Exception) {
-                _authState.value = AuthState.ErrorString(e.message ?: "Произошла неизвестная ошибка")
+                _authState.value = AuthState.Error(R.string.auth_error_unknown)
             }
         }
     }
@@ -72,7 +68,7 @@ class AuthViewModel(
             val user = authRepository.findUserByUsername(usernameOrEmail) ?: authRepository.findUserByEmail(usernameOrEmail)
 
             if (user == null) {
-                _authState.value = AuthState.ErrorString("Пользователь не найден")
+                _authState.value = AuthState.Error(R.string.auth_error_user_not_found)
                 return@launch
             }
 
@@ -80,9 +76,9 @@ class AuthViewModel(
             if (user.passwordHash == passwordHash) {
                 sessionManager.setLoggedIn(true)
                 sessionManager.saveUserId(user.id)
-                _authState.value = AuthState.Success("Вход выполнен успешно!")
+                _authState.value = AuthState.Success(R.string.auth_success_login)
             } else {
-                _authState.value = AuthState.ErrorString("Неверный пароль")
+                _authState.value = AuthState.Error(R.string.auth_error_wrong_password)
             }
         }
     }
@@ -99,9 +95,8 @@ class AuthViewModel(
 
 sealed class AuthState {
     object Idle : AuthState()
-    data class Success(val message: String) : AuthState()
+    data class Success(val messageResId: Int) : AuthState()
     data class Error(val messageResId: Int) : AuthState()
-    data class ErrorString(val message: String) : AuthState()
 }
 
 class AuthViewModelFactory(

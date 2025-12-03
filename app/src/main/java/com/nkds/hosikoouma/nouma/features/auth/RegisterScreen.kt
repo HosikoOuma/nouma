@@ -62,12 +62,8 @@ fun RegisterScreen(
                 Toast.makeText(context, context.getString(state.messageResId), Toast.LENGTH_SHORT).show()
                 authViewModel.resetAuthState()
             }
-            is AuthState.ErrorString -> {
-                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
-                authViewModel.resetAuthState()
-            }
             is AuthState.Success -> {
-                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(state.messageResId), Toast.LENGTH_SHORT).show()
                 authViewModel.resetAuthState()
                 onRegisterSuccess()
             }
@@ -121,7 +117,7 @@ fun RegisterScreen(
                 )
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.cd_register_icon),
                     modifier = Modifier.size(48.dp)
                 )
             }

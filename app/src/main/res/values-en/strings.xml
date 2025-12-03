@@ -7,11 +7,13 @@
     <string name="welcome_button_text">Next</string>
     <string name="login_signin_text">Login\nSign in</string>
     <string name="ls_des">Don\'t have an account yet? Press that huge button with the plus</string>
+    <string name="cd_welcome_heart">Decorative heart</string>
 
     <!-- Login Screen -->
     <string name="login_title">Login</string>
     <string name="login_username_hint">Username or email</string>
     <string name="login_password_hint">Password</string>
+    <string name="cd_login_icon">Login</string>
 
     <!-- Register Screen -->
     <string name="register_title">Register</string>
@@ -19,6 +21,19 @@
     <string name="register_email_hint">Email</string>
     <string name="register_password_hint">Password</string>
     <string name="register_confirm_password_hint">Confirm password</string>
+    <string name="cd_register_icon">Register</string>
+
+    <!-- Auth Screen -->
+    <string name="auth_login_button">Login</string>
+    <string name="auth_signup_button">Sign up</string>
+    <string name="cd_auth_key_icon">Key icon</string>
+
+    <!-- Auth ViewModel -->
+    <string name="auth_success_register">Registration successful!</string>
+    <string name="auth_error_unknown">An unknown error has occurred</string>
+    <string name="auth_error_user_not_found">User not found</string>
+    <string name="auth_success_login">Login successful!</string>
+    <string name="auth_error_wrong_password">Wrong password</string>
 
     <!-- Validation Errors -->
     <string name="error_passwords_do_not_match">Passwords do not match</string>
@@ -64,6 +79,8 @@
     <string name="language_system">System</string>
     <string name="language_russian">Russian</string>
     <string name="language_english">English</string>
+    <string name="developer_telegram_label">TG</string>
+    <string name="user_id">ID: %d</string>
 
     <!-- Chats Screen -->
     <string name="chats_selected_count">Selected: %d</string>
@@ -88,6 +105,10 @@
     <string name="bottom_nav_contacts">Contacts</string>
     <string name="bottom_nav_settings">Settings</string>
 
+    <!-- Main Screen -->
+    <string name="main_chats_title">Nouma</string>
+    <string name="main_contacts_title">Contacts</string>
+
     <!-- Conversation Screen -->
     <string name="conversation_back">Back</string>
     <string name="conversation_message_hint">Message</string>
@@ -98,5 +119,21 @@
     <string name="attachment_camera">Camera</string>
     <string name="voice_message_hold_to_record">Hold to record</string>
     <string name="voice_message_recording">Recording...</string>
+    <string name="cd_image_message">Attached image</string>
+    <string name="cd_video_thumbnail">Video thumbnail</string>
+    <string name="cd_play_video">Play video</string>
+    <string name="cd_file_attachment">File attachment</string>
+    <string name="cd_album_art">Album art</string>
+    <string name="camera_dialog_title">Camera</string>
+    <string name="camera_dialog_text">Take a photo or record a video?</string>
+    <string name="camera_dialog_photo">Photo</string>
+    <string name="camera_dialog_video">Video</string>
+    <string name="edit_message_title">Editing</string>
+    <string name="cd_cancel_edit">Cancel edit</string>
+    <string name="cd_attach_file">Attach file</string>
+    <string name="cd_confirm_edit">Confirm edit</string>
+    <string name="voice_message_filename">Voice message %s</string>
+    <string name="error_cannot_open_file">Cannot open file</string>
+    <string name="cd_edit_message">Edit message</string>
 
 </resources>

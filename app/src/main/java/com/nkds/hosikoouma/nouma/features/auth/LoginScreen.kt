@@ -57,12 +57,8 @@ fun LoginScreen(
                 Toast.makeText(context, context.getString(state.messageResId), Toast.LENGTH_SHORT).show()
                 authViewModel.resetAuthState()
             }
-            is AuthState.ErrorString -> {
-                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
-                authViewModel.resetAuthState()
-            }
             is AuthState.Success -> {
-                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(state.messageResId), Toast.LENGTH_SHORT).show()
                 authViewModel.resetAuthState()
                 onLoginSuccess()
             }
@@ -113,7 +109,7 @@ fun LoginScreen(
                 )
                 Icon(
                     imageVector = Icons.Default.Login,
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.cd_login_icon),
                     modifier = Modifier.size(48.dp)
                 )
             }

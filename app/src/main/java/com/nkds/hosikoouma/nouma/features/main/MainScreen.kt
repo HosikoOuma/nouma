@@ -1,28 +1,26 @@
 package com.nkds.hosikoouma.nouma.features.main
 
+import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Chat
-import androidx.compose.material.icons.filled.Contacts
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -52,9 +50,6 @@ import com.nkds.hosikoouma.nouma.features.settings.SettingsScreen
 import com.nkds.hosikoouma.nouma.features.settings.SettingsViewModel
 import com.nkds.hosikoouma.nouma.utils.SessionManager
 import com.nkds.hosikoouma.nouma.utils.performVibration
-import androidx.compose.foundation.layout.WindowInsets // <-- Не забудьте импортировать
-import androidx.compose.foundation.layout.consumeWindowInsets // <-- И это
-
 
 sealed class BottomBarScreen(val route: String, @StringRes val titleResId: Int, val icon: ImageVector) {
     object Contacts : BottomBarScreen("contacts", R.string.bottom_nav_contacts, Icons.Default.Contacts)
@@ -74,6 +69,7 @@ val bottomBarScreens = listOf(
     BottomBarScreen.Settings,
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     onLogoutClick: () -> Unit,
@@ -91,19 +87,55 @@ fun MainScreen(
     val chatsViewModel: ChatsViewModel = viewModel(
         factory = ChatsViewModelFactory(chatRepository, sessionManager)
     )
+    val selectedChatIds by chatsViewModel.selectedChatIds.collectAsState()
+    val isChatSelectionMode = selectedChatIds.isNotEmpty()
+    var showNewChatDialog by remember { mutableStateOf(false) }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    val shouldShowBottomBar = bottomBarScreens.any { it.route == currentDestination?.route }
+    val currentRoute = currentDestination?.route
+    val shouldShowBottomBar = bottomBarScreens.any { it.route == currentRoute }
+
+    if (isChatSelectionMode && currentRoute == BottomBarScreen.Chats.route) {
+        BackHandler { chatsViewModel.clearSelections() }
+    }
 
     Scaffold(
-        //contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = {
+            if (isChatSelectionMode && currentRoute == BottomBarScreen.Chats.route) {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.chats_selected_count, selectedChatIds.size)) },
+                    navigationIcon = { IconButton(onClick = { chatsViewModel.clearSelections() }) { Icon(Icons.Default.ArrowBack, contentDescription = stringResource(id = R.string.action_cancel)) } },
+                    actions = { IconButton(onClick = { chatsViewModel.requestDeletion() }) { Icon(Icons.Default.Delete, contentDescription = stringResource(id = R.string.action_delete)) } }
+                )
+            } else if (shouldShowBottomBar) {
+                when (currentRoute) {
+                    BottomBarScreen.Chats.route -> TopAppBar(title = { Text(stringResource(R.string.main_chats_title)) })
+                    BottomBarScreen.Contacts.route -> TopAppBar(title = { Text(stringResource(R.string.main_contacts_title)) })
+                    BottomBarScreen.Settings.route -> TopAppBar(
+                        title = { Text(stringResource(R.string.settings_title)) },
+                        actions = {
+                            val settingsUiState by settingsViewModel.uiState.collectAsState()
+                            if (settingsUiState.isEditing) {
+                                IconButton(onClick = { settingsViewModel.onSave() }) {
+                                    Icon(Icons.Default.Save, contentDescription = stringResource(R.string.settings_save))
+                                }
+                                IconButton(onClick = { settingsViewModel.onCancel() }) {
+                                    Icon(Icons.Default.Cancel, contentDescription = stringResource(R.string.action_cancel))
+                                }
+                            } else {
+                                IconButton(onClick = { settingsViewModel.onEdit() }) {
+                                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.settings_edit))
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+        },
         bottomBar = {
             if (shouldShowBottomBar) {
-                NavigationBar(
-                    tonalElevation = 0.dp
-                            //containerColor = MaterialTheme.colorScheme.background
-                ) { 
+                NavigationBar(tonalElevation = 0.dp) { 
                     bottomBarScreens.forEach { screen ->
                         NavigationBarItem(
                             selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
@@ -121,37 +153,82 @@ fun MainScreen(
                     }
                 }
             }
+        },
+        floatingActionButton = {
+            if (currentRoute == BottomBarScreen.Chats.route && !isChatSelectionMode) {
+                LargeFloatingActionButton(onClick = { showNewChatDialog = true }) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.new_chat_dialog_title),
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+            }
         }
     ) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = BottomBarScreen.Chats.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)
         ) {
+            val animationSpec: FiniteAnimationSpec<IntOffset> = tween(300)
             composable(
                 route = BottomBarScreen.Contacts.route,
-                enterTransition = { fadeIn(animationSpec = tween(300)) },
-                exitTransition = { fadeOut(animationSpec = tween(300)) },
-                popEnterTransition = { fadeIn(animationSpec = tween(300)) },
-                popExitTransition = { fadeOut(animationSpec = tween(300)) }
+                enterTransition = { slideInHorizontally(animationSpec = animationSpec) { fullWidth -> -fullWidth } },
+                exitTransition = { slideOutHorizontally(animationSpec = animationSpec) { fullWidth -> -fullWidth } },
+                popEnterTransition = { slideInHorizontally(animationSpec = animationSpec) { fullWidth -> -fullWidth } },
+                popExitTransition = { slideOutHorizontally(animationSpec = animationSpec) { fullWidth -> -fullWidth } }
             ) { ContactsScreen() }
             composable(
                 route = BottomBarScreen.Chats.route,
-                enterTransition = { fadeIn(animationSpec = tween(300)) },
-                exitTransition = { fadeOut(animationSpec = tween(300)) },
-                popEnterTransition = { fadeIn(animationSpec = tween(300)) },
-                popExitTransition = { fadeOut(animationSpec = tween(300)) }
-            ) { ChatsScreen(chatsViewModel = chatsViewModel, onChatClick = { chatId -> navController.navigate("${MainDestinations.CONVERSATION_ROUTE}/$chatId") }) }
+                enterTransition = { 
+                    if (initialState.destination.route == BottomBarScreen.Contacts.route) {
+                        slideInHorizontally(animationSpec = animationSpec) { fullWidth -> fullWidth }
+                    } else {
+                        slideInHorizontally(animationSpec = animationSpec) { fullWidth -> -fullWidth }
+                    }
+                },
+                exitTransition = { 
+                    if (targetState.destination.route == BottomBarScreen.Contacts.route) {
+                        slideOutHorizontally(animationSpec = animationSpec) { fullWidth -> fullWidth }
+                    } else {
+                        slideOutHorizontally(animationSpec = animationSpec) { fullWidth -> -fullWidth }
+                    }
+                },
+                popEnterTransition = { 
+                    if (initialState.destination.route == BottomBarScreen.Contacts.route) {
+                        slideInHorizontally(animationSpec = animationSpec) { fullWidth -> fullWidth }
+                    } else {
+                        slideInHorizontally(animationSpec = animationSpec) { fullWidth -> -fullWidth }
+                    }
+                },
+                popExitTransition = { 
+                     if (targetState.destination.route == BottomBarScreen.Contacts.route) {
+                        slideOutHorizontally(animationSpec = animationSpec) { fullWidth -> fullWidth }
+                    } else {
+                        slideOutHorizontally(animationSpec = animationSpec) { fullWidth -> -fullWidth }
+                    }
+                }
+            ) { 
+                ChatsScreen(
+                    chatsViewModel = chatsViewModel, 
+                    showNewChatDialog = showNewChatDialog,
+                    setShowNewChatDialog = { showNewChatDialog = it },
+                    onChatClick = { chatId -> navController.navigate("${MainDestinations.CONVERSATION_ROUTE}/$chatId") } 
+                )
+            }
             composable(
                 route = BottomBarScreen.Settings.route,
-                enterTransition = { fadeIn(animationSpec = tween(300)) },
-                exitTransition = { fadeOut(animationSpec = tween(300)) },
-                popEnterTransition = { fadeIn(animationSpec = tween(300)) },
-                popExitTransition = { fadeOut(animationSpec = tween(300)) }
+                enterTransition = { slideInHorizontally(animationSpec = animationSpec) { fullWidth -> fullWidth } },
+                exitTransition = { slideOutHorizontally(animationSpec = animationSpec) { fullWidth -> fullWidth } },
+                popEnterTransition = { slideInHorizontally(animationSpec = animationSpec) { fullWidth -> fullWidth } },
+                popExitTransition = { slideOutHorizontally(animationSpec = animationSpec) { fullWidth -> fullWidth } }
             ) { SettingsScreen(settingsViewModel = settingsViewModel, onLogoutClick = onLogoutClick) }
             composable(
                 route = "${MainDestinations.CONVERSATION_ROUTE}/{chatId}",
-                arguments = listOf(navArgument("chatId") { type = NavType.StringType })
+                arguments = listOf(navArgument("chatId") { type = NavType.StringType }),
+                enterTransition = { fadeIn(animationSpec = tween(300)) },
+                exitTransition = { fadeOut(animationSpec = tween(300)) }
             ) { backStackEntry ->
                 val chatId = backStackEntry.arguments?.getString("chatId") ?: "-1"
                 ConversationScreen(
@@ -172,7 +249,8 @@ fun MainScreen(
                     navArgument("chatId") { type = NavType.StringType },
                     navArgument("messageId") { type = NavType.StringType }
                 ),
-                popExitTransition = { fadeOut(animationSpec = tween(0)) }
+                enterTransition = { fadeIn(animationSpec = tween(0)) },
+                exitTransition = { fadeOut(animationSpec = tween(0)) }
             ) { 
                 MediaViewerScreen(
                     viewModel = viewModel(factory = MediaViewerViewModelFactory(conversationRepository)),
@@ -181,7 +259,9 @@ fun MainScreen(
             }
             composable(
                 route = "${MainDestinations.PROFILE_ROUTE}/{userId}",
-                arguments = listOf(navArgument("userId") { type = NavType.StringType })
+                arguments = listOf(navArgument("userId") { type = NavType.StringType }),
+                enterTransition = { fadeIn(animationSpec = tween(300)) },
+                exitTransition = { fadeOut(animationSpec = tween(300)) }
             ) { 
                 ProfileScreen(
                     viewModel = viewModel(factory = ProfileViewModelFactory(userRepository)),

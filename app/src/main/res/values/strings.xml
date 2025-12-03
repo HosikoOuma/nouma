@@ -7,11 +7,13 @@
     <string name="welcome_button_text">Вперёд</string>
     <string name="login_signin_text">Вход\nРегистрация</string>
     <string name="ls_des">Ещё нет аккаунта? Нажми вот ту огромную кнопку с плюсом</string>
+    <string name="cd_welcome_heart">Декоративное сердечко</string>
 
     <!-- Login Screen -->
     <string name="login_title">Вход</string>
     <string name="login_username_hint">Имя пользователя или почта</string>
     <string name="login_password_hint">Пароль</string>
+    <string name="cd_login_icon">Войти</string>
 
     <!-- Register Screen -->
     <string name="register_title">Регистрация</string>
@@ -19,6 +21,19 @@
     <string name="register_email_hint">Электронная почта</string>
     <string name="register_password_hint">Пароль</string>
     <string name="register_confirm_password_hint">Подтвердите пароль</string>
+    <string name="cd_register_icon">Зарегистрироваться</string>
+
+    <!-- Auth Screen -->
+    <string name="auth_login_button">Войти</string>
+    <string name="auth_signup_button">Зарегистрироваться</string>
+    <string name="cd_auth_key_icon">Иконка ключа</string>
+
+    <!-- Auth ViewModel -->
+    <string name="auth_success_register">Регистрация прошла успешно!</string>
+    <string name="auth_error_unknown">Произошла неизвестная ошибка</string>
+    <string name="auth_error_user_not_found">Пользователь не найден</string>
+    <string name="auth_success_login">Вход выполнен успешно!</string>
+    <string name="auth_error_wrong_password">Неверный пароль</string>
 
     <!-- Validation Errors -->
     <string name="error_passwords_do_not_match">Пароли не совпадают</string>
@@ -64,6 +79,8 @@
     <string name="language_system">Системный</string>
     <string name="language_russian">Русский</string>
     <string name="language_english">Английский</string>
+    <string name="developer_telegram_label">TG</string>
+    <string name="user_id">ID: %d</string>
 
     <!-- Chats Screen -->
     <string name="chats_selected_count">Выбрано: %d</string>
@@ -88,6 +105,10 @@
     <string name="bottom_nav_contacts">Контакты</string>
     <string name="bottom_nav_settings">Настройки</string>
 
+    <!-- Main Screen -->
+    <string name="main_chats_title">Nouma</string>
+    <string name="main_contacts_title">Контакты</string>
+
     <!-- Conversation Screen -->
     <string name="conversation_back">Назад</string>
     <string name="conversation_message_hint">Сообщение</string>
@@ -98,5 +119,21 @@
     <string name="attachment_camera">Камера</string>
     <string name="voice_message_hold_to_record">Удерживайте для записи</string>
     <string name="voice_message_recording">Запись...</string>
+    <string name="cd_image_message">Прикреплённое изображение</string>
+    <string name="cd_video_thumbnail">Миниатюра видео</string>
+    <string name="cd_play_video">Воспроизвести видео</string>
+    <string name="cd_file_attachment">Прикреплённый файл</string>
+    <string name="cd_album_art">Обложка альбома</string>
+    <string name="camera_dialog_title">Камера</string>
+    <string name="camera_dialog_text">Сделать фото или записать видео?</string>
+    <string name="camera_dialog_photo">Фото</string>
+    <string name="camera_dialog_video">Видео</string>
+    <string name="edit_message_title">Редактирование</string>
+    <string name="cd_cancel_edit">Отменить редактирование</string>
+    <string name="cd_attach_file">Прикрепить файл</string>
+    <string name="cd_confirm_edit">Подтвердить редактирование</string>
+    <string name="voice_message_filename">Голосовое сообщение %s</string>
+    <string name="error_cannot_open_file">Не удаётся открыть файл</string>
+    <string name="cd_edit_message">Редактировать сообщение</string>
 
 </resources>

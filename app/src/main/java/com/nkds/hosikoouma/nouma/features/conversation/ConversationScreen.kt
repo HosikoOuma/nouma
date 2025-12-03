@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.media.MediaPlayer
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.MediaStore
@@ -56,6 +57,7 @@ import com.nkds.hosikoouma.nouma.data.local.Message
 import com.nkds.hosikoouma.nouma.data.local.MessageType
 import com.nkds.hosikoouma.nouma.features.player.MusicPlayer
 import com.nkds.hosikoouma.nouma.utils.copyUriToInternalStorage
+import com.nkds.hosikoouma.nouma.utils.createAvatarImageRequest
 import com.nkds.hosikoouma.nouma.utils.getFileNameFromUri
 import com.nkds.hosikoouma.nouma.utils.performVibration
 import java.io.File
@@ -120,7 +122,7 @@ fun MessageItem(
                     if (message.text != null) {
                         AsyncImage(
                             model = Uri.parse(message.text),
-                            contentDescription = "Image",
+                            contentDescription = stringResource(R.string.cd_image_message),
                             modifier = Modifier.size(200.dp).clip(RoundedCornerShape(16.dp)),
                             contentScale = ContentScale.Crop
                         )
@@ -135,11 +137,11 @@ fun MessageItem(
                             AsyncImage(
                                 model = Uri.parse(message.text),
                                 imageLoader = CoilImageLoader.get(context),
-                                contentDescription = "Video Thumbnail",
+                                contentDescription = stringResource(R.string.cd_video_thumbnail),
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
                             )
-                            Icon(Icons.Default.PlayArrow, contentDescription = "Video", tint = Color.White, modifier = Modifier.size(48.dp))
+                            Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.cd_play_video), tint = Color.White, modifier = Modifier.size(48.dp))
                         }
                     }
                 }
@@ -151,13 +153,13 @@ fun MessageItem(
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.Description, contentDescription = "File", tint = textColor)
+                        Icon(Icons.Default.Description, contentDescription = stringResource(R.string.cd_file_attachment), tint = textColor)
                         Spacer(Modifier.width(8.dp))
-                        Text(text = message.fileName ?: "File", color = textColor)
+                        Text(text = message.fileName ?: stringResource(R.string.chat_media_type_file), color = textColor)
                     }
                 }
                 MessageType.MUSIC, MessageType.VOICE -> {
-                    var albumArt by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+                    var albumArt by remember(message.messageId) { mutableStateOf<android.graphics.Bitmap?>(null) }
 
                     LaunchedEffect(message.text) {
                         if (message.text == null || message.type == MessageType.VOICE) return@LaunchedEffect
@@ -188,7 +190,7 @@ fun MessageItem(
                              if (albumArt != null) {
                                 Image(
                                     bitmap = albumArt!!.asImageBitmap(),
-                                    contentDescription = "Album Art",
+                                    contentDescription = stringResource(R.string.cd_album_art),
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize()
                                 )
@@ -197,7 +199,7 @@ fun MessageItem(
                             }
                         }
                         Spacer(Modifier.width(12.dp))
-                        Text(text = message.fileName ?: "Music", color = textColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(text = message.fileName ?: stringResource(R.string.chat_media_type_music), color = textColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Spacer(Modifier.width(4.dp))
                     }
                 }
@@ -231,6 +233,14 @@ fun ConversationScreen(
     var showAttachmentSheet by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
+    val messageSoundPlayer = remember {
+        MediaPlayer.create(context, R.raw.sms)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { messageSoundPlayer.release() }
+    }
+
     fun createTempFile(extension: String): File {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
         val storageDir: File? = context.cacheDir
@@ -255,14 +265,20 @@ fun ConversationScreen(
 
     val takePictureLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success: Boolean ->
         if (success) {
-            tempCameraUri?.let { viewModel.sendImageMessage(it) }
+            tempCameraUri?.let { 
+                viewModel.sendImageMessage(it) 
+                messageSoundPlayer.start()
+            }
         }
         tempCameraUri = null
     }
 
     val takeVideoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
         if (result.resultCode == Activity.RESULT_OK) {
-            tempCameraUri?.let { viewModel.sendVideoMessage(it) }
+            tempCameraUri?.let { 
+                viewModel.sendVideoMessage(it)
+                messageSoundPlayer.start()
+            }
         }
         tempCameraUri = null
     }
@@ -308,6 +324,7 @@ fun ConversationScreen(
                         }
                     }
                 }
+                messageSoundPlayer.start()
             }
             showAttachmentSheet = false
         }
@@ -321,6 +338,7 @@ fun ConversationScreen(
                 val internalUri = copyUriToInternalStorage(context, it)
                 if (internalUri != null) {
                     viewModel.sendFileMessage(internalUri, fileName)
+                    messageSoundPlayer.start()
                 }
             }
             showAttachmentSheet = false
@@ -335,6 +353,7 @@ fun ConversationScreen(
                 val internalUri = copyUriToInternalStorage(context, it)
                 if (internalUri != null) {
                     viewModel.sendMusicMessage(internalUri, fileName)
+                    messageSoundPlayer.start()
                 }
             }
             showAttachmentSheet = false
@@ -344,8 +363,8 @@ fun ConversationScreen(
     if (showCameraChoiceDialog) {
         AlertDialog(
             onDismissRequest = { showCameraChoiceDialog = false },
-            title = { Text("Камера") },
-            text = { Text("Сделать фото или записать видео?") },
+            title = { Text(stringResource(R.string.camera_dialog_title)) },
+            text = { Text(stringResource(R.string.camera_dialog_text)) },
             confirmButton = {
                 TextButton(onClick = { 
                     if (cameraPermissionState.status.isGranted) {
@@ -354,7 +373,7 @@ fun ConversationScreen(
                         cameraPermissionState.launchPermissionRequest()
                     }
                     showCameraChoiceDialog = false
-                }) { Text("Фото") }
+                }) { Text(stringResource(R.string.camera_dialog_photo)) }
             },
             dismissButton = {
                  TextButton(onClick = { 
@@ -364,7 +383,7 @@ fun ConversationScreen(
                         cameraPermissionState.launchPermissionRequest()
                     }
                     showCameraChoiceDialog = false
-                 }) { Text("Видео") }
+                 }) { Text(stringResource(R.string.camera_dialog_video)) }
             }
         )
     }
@@ -379,22 +398,26 @@ fun ConversationScreen(
                     modifier = Modifier.clickable { 
                         showAttachmentSheet = false
                         showCameraChoiceDialog = true
-                    }
+                    },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                 )
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.attachment_media)) },
                     leadingContent = { Icon(Icons.Default.PhotoLibrary, contentDescription = null) },
-                    modifier = Modifier.clickable { mediaPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)) }
+                    modifier = Modifier.clickable { mediaPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)) },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                 )
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.attachment_file)) },
                     leadingContent = { Icon(Icons.Default.FileOpen, contentDescription = null) },
-                    modifier = Modifier.clickable { filePickerLauncher.launch("*/*") }
+                    modifier = Modifier.clickable { filePickerLauncher.launch("*/*") },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                 )
                  ListItem(
                     headlineContent = { Text(stringResource(R.string.attachment_music)) },
                     leadingContent = { Icon(Icons.Default.Audiotrack, contentDescription = null) },
-                    modifier = Modifier.clickable { musicPickerLauncher.launch("audio/*") }
+                    modifier = Modifier.clickable { musicPickerLauncher.launch("audio/*") },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                 )
             }
         }
@@ -443,6 +466,7 @@ fun ConversationScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             if (isSelectionMode) {
                 TopAppBar(
@@ -460,7 +484,7 @@ fun ConversationScreen(
                         val selectedMessage = uiState.messages.find { it.messageId == selectedMessageIds.firstOrNull() }
                         if (selectedMessageIds.size == 1 && selectedMessage?.type == MessageType.TEXT && selectedMessage.senderId == viewModel.currentUserId) {
                             IconButton(onClick = { viewModel.startEditingMessage() }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Edit")
+                                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit_message))
                             }
                         }
                         IconButton(onClick = { viewModel.requestMessageDeletion() }) {
@@ -478,7 +502,12 @@ fun ConversationScreen(
                             ) {
                                 Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer), contentAlignment = Alignment.Center) {
                                     if (it.avatarUri != null) {
-                                        AsyncImage(model = Uri.parse(it.avatarUri), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                                        AsyncImage(
+                                            model = createAvatarImageRequest(context, Uri.parse(it.avatarUri)),
+                                            contentDescription = null,
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Crop
+                                        )
                                     } else {
                                         Text(text = (it.nickname ?: it.username).first().toString())
                                     }
@@ -501,14 +530,14 @@ fun ConversationScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                             Text("Редактирование", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                             Text(stringResource(R.string.edit_message_title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                              Text(uiState.messageToEdit?.text ?: "", maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         IconButton(onClick = {
                             viewModel.cancelEditing()
                             text = ""
                         }) {
-                            Icon(Icons.Default.Close, contentDescription = "Cancel Edit")
+                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_cancel_edit))
                         }
                     }
                 }
@@ -518,7 +547,7 @@ fun ConversationScreen(
                 ) {
                     if (!isEditMode) {
                         IconButton(onClick = { showAttachmentSheet = true }) {
-                            Icon(Icons.Default.AttachFile, contentDescription = "Прикрепить")
+                            Icon(Icons.Default.AttachFile, contentDescription = stringResource(R.string.cd_attach_file))
                         }
                     }
 
@@ -546,10 +575,11 @@ fun ConversationScreen(
                             } else {
                                 viewModel.sendTextMessage(text)
                             }
+                            messageSoundPlayer.start()
                             text = ""
                         }) {
                             val icon = if (isEditMode) Icons.Default.Done else Icons.AutoMirrored.Filled.Send
-                            val description = if (isEditMode) "Confirm edit" else stringResource(R.string.conversation_send)
+                            val description = if (isEditMode) stringResource(R.string.cd_confirm_edit) else stringResource(R.string.conversation_send)
                             Icon(icon, contentDescription = description)
                         }
                     } else if (!isEditMode) {
@@ -571,8 +601,9 @@ fun ConversationScreen(
                                     isRecording = false
                                     voiceRecorder.stopRecording()?.let { file ->
                                         val uri = Uri.fromFile(file)
-                                        val fileName = "Voice message ${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())}"
+                                        val fileName = context.getString(R.string.voice_message_filename, SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date()))
                                         viewModel.sendVoiceMessage(uri, fileName)
+                                        messageSoundPlayer.start()
                                     }
                                 }
                             }
@@ -601,9 +632,7 @@ fun ConversationScreen(
         LazyColumn(
             state = listState,
             reverseLayout = true,
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-            contentPadding = PaddingValues(vertical = 8.dp),
-            verticalArrangement = Arrangement.Bottom
+            modifier = Modifier.fillMaxSize().padding(innerPadding)
         ) {
             items(uiState.messages) { message ->
                 MessageItem(
@@ -615,7 +644,7 @@ fun ConversationScreen(
                     onMediaClick = { messageId -> onNavigateToMedia(chatId, messageId.toString()) },
                     onFileClick = { fileMessage ->
                         try {
-                            val file = File(Uri.parse(fileMessage.text).path!!)
+                            val file = java.io.File(Uri.parse(fileMessage.text).path!!)
                             val fileUri = FileProvider.getUriForFile(
                                 context,
                                 context.applicationContext.packageName + ".provider",
@@ -629,7 +658,7 @@ fun ConversationScreen(
                             }
                             context.startActivity(intent)
                         } catch (e: Exception) {
-                            Toast.makeText(context, "Cannot open file", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.error_cannot_open_file), Toast.LENGTH_SHORT).show()
                         }
                     },
                     onMusicClick = { musicMessageToPlay = it }

@@ -54,7 +54,7 @@ fun AuthScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Login,
-                        contentDescription = "Login",
+                        contentDescription = stringResource(R.string.auth_login_button),
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -70,7 +70,7 @@ fun AuthScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Sign up",
+                        contentDescription = stringResource(R.string.auth_signup_button),
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -95,7 +95,7 @@ fun AuthScreen(
                 )
                 Icon(
                     imageVector = Icons.Outlined.Key,
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.cd_auth_key_icon),
                     modifier = Modifier.size(48.dp)
                 )
             }
