@@ -89,6 +89,7 @@
     <string name="new_chat_dialog_create">Создать</string>
     <string name="chat_media_type_photo">Фото</string>
     <string name="chat_media_type_video">Видео</string>
+    <string name="chat_media_type_video_note">Видео сообщение</string>
     <string name="chat_media_type_file">Файл</string>
     <string name="chat_media_type_music">Музыка</string>
     <string name="chat_media_type_voice">Голосовое сообщение</string>
@@ -118,7 +119,9 @@
     <string name="attachment_music">Музыка</string>
     <string name="attachment_camera">Камера</string>
     <string name="voice_message_hold_to_record">Удерживайте для записи</string>
+    <string name="video_note_hold_to_record">Удерживайте для записи видео</string>
     <string name="voice_message_recording">Запись...</string>
+    <string name="video_note_recording">Запись видео...</string>
     <string name="cd_image_message">Прикреплённое изображение</string>
     <string name="cd_video_thumbnail">Миниатюра видео</string>
     <string name="cd_play_video">Воспроизвести видео</string>

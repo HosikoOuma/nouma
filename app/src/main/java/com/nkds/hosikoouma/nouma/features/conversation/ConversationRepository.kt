@@ -46,6 +46,16 @@ class ConversationRepository(
         messageDao.insertMessage(message)
     }
 
+    suspend fun sendVideoNoteMessage(chatId: Int, senderId: Int, videoUri: Uri) {
+        val message = Message(
+            chatId = chatId,
+            senderId = senderId,
+            text = videoUri.toString(),
+            type = MessageType.VIDEO_NOTE
+        )
+        messageDao.insertMessage(message)
+    }
+
     suspend fun sendFileMessage(chatId: Int, senderId: Int, fileUri: Uri, fileName: String) {
         val message = Message(
             chatId = chatId,

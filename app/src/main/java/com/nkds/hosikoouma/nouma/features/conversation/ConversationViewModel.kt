@@ -8,6 +8,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.nkds.hosikoouma.nouma.data.local.Message
+import com.nkds.hosikoouma.nouma.data.local.MessageType
 import com.nkds.hosikoouma.nouma.data.local.User
 import com.nkds.hosikoouma.nouma.features.bot.BotScript
 import com.nkds.hosikoouma.nouma.utils.SessionManager
@@ -19,6 +20,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+enum class RecordingMode {
+    VOICE,
+    VIDEO_NOTE
+}
 
 data class ConversationUiState(
     val messages: List<Message> = emptyList(),
@@ -38,6 +44,8 @@ class ConversationViewModel(
     private val _messages = repository.getMessages(chatId)
     private val _opponent = MutableStateFlow<User?>(null)
     private val _messageToEdit = MutableStateFlow<Message?>(null)
+    private val _recordingMode = MutableStateFlow(RecordingMode.VOICE)
+    val recordingMode = _recordingMode.asStateFlow()
 
     val uiState = combine(_messages, _opponent, _messageToEdit) { messages, opponent, messageToEdit ->
         ConversationUiState(messages, opponent, messageToEdit)
@@ -56,6 +64,12 @@ class ConversationViewModel(
     init {
         loadOpponent()
         markMessagesAsRead()
+    }
+
+    fun switchRecordingMode() {
+        _recordingMode.update { 
+            if (it == RecordingMode.VOICE) RecordingMode.VIDEO_NOTE else RecordingMode.VOICE 
+        }
     }
 
     private fun markMessagesAsRead() {
@@ -133,6 +147,12 @@ class ConversationViewModel(
     fun sendVideoMessage(uri: Uri) {
         viewModelScope.launch {
             repository.sendVideoMessage(chatId, currentUserId, uri)
+        }
+    }
+
+    fun sendVideoNoteMessage(uri: Uri) {
+        viewModelScope.launch {
+            repository.sendVideoNoteMessage(chatId, currentUserId, uri)
         }
     }
 

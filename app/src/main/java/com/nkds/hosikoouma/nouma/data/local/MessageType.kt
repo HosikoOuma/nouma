@@ -4,6 +4,7 @@ enum class MessageType {
     TEXT,
     IMAGE,
     VIDEO,
+    VIDEO_NOTE,
     FILE,
     MUSIC,
     VOICE

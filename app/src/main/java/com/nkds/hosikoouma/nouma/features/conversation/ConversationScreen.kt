@@ -14,14 +14,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -39,14 +40,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.FileProvider
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -60,9 +66,43 @@ import com.nkds.hosikoouma.nouma.utils.copyUriToInternalStorage
 import com.nkds.hosikoouma.nouma.utils.createAvatarImageRequest
 import com.nkds.hosikoouma.nouma.utils.getFileNameFromUri
 import com.nkds.hosikoouma.nouma.utils.performVibration
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+
+@Composable
+fun VideoNotePlayer(uri: Uri, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val exoPlayer = remember(uri) {
+        ExoPlayer.Builder(context).build().apply {
+            setMediaItem(MediaItem.fromUri(uri))
+            repeatMode = Player.REPEAT_MODE_ONE
+            playWhenReady = true
+            prepare()
+        }
+    }
+
+    DisposableEffect(uri) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
+
+    AndroidView(
+        modifier = modifier,
+        factory = {
+            PlayerView(it).apply {
+                player = exoPlayer
+                useController = false
+                setOnClickListener {
+                    exoPlayer.playWhenReady = !exoPlayer.playWhenReady
+                }
+            }
+        }
+    )
+}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -94,7 +134,7 @@ fun MessageItem(
                         onToggleSelection(message.messageId)
                     } else {
                         when (message.type) {
-                            MessageType.IMAGE, MessageType.VIDEO -> onMediaClick(message.messageId)
+                            MessageType.IMAGE, MessageType.VIDEO, MessageType.VIDEO_NOTE -> onMediaClick(message.messageId)
                             MessageType.FILE -> onFileClick(message)
                             MessageType.MUSIC, MessageType.VOICE -> onMusicClick(message)
                             else -> Unit
@@ -143,6 +183,16 @@ fun MessageItem(
                             )
                             Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.cd_play_video), tint = Color.White, modifier = Modifier.size(48.dp))
                         }
+                    }
+                }
+                MessageType.VIDEO_NOTE -> {
+                    if (message.text != null) {
+                        VideoNotePlayer(
+                            uri = Uri.parse(message.text),
+                            modifier = Modifier
+                                .size(200.dp)
+                                .clip(CircleShape)
+                        )
                     }
                 }
                  MessageType.FILE -> {
@@ -224,6 +274,7 @@ fun ConversationScreen(
     onNavigateToProfile: (Int) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val recordingMode by viewModel.recordingMode.collectAsState()
     val selectedMessageIds by viewModel.selectedMessageIds.collectAsState()
     val isSelectionMode = selectedMessageIds.isNotEmpty()
     val showDeleteConfirmation by viewModel.showDeleteConfirmation.collectAsState()
@@ -232,6 +283,7 @@ fun ConversationScreen(
     val listState = rememberLazyListState()
     var showAttachmentSheet by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     val messageSoundPlayer = remember {
         MediaPlayer.create(context, R.raw.sms)
@@ -254,6 +306,31 @@ fun ConversationScreen(
     var musicMessageToPlay by remember { mutableStateOf<Message?>(null) }
     var showCameraChoiceDialog by remember { mutableStateOf(false) }
     var isRecording by remember { mutableStateOf(false) }
+    var isRecordingVideo by remember { mutableStateOf(false) }
+
+    val cameraManager = remember {
+        CameraManager(
+            context = context,
+            lifecycleOwner = lifecycleOwner,
+            onRecordingStarted = { isRecordingVideo = true },
+            onRecordingFinished = { file ->
+                isRecordingVideo = false
+                val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+                viewModel.sendVideoNoteMessage(uri)
+                messageSoundPlayer.start()
+            },
+            onError = {
+                isRecordingVideo = false
+                Toast.makeText(context, "Camera error: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            cameraManager.release()
+        }
+    }
 
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
@@ -558,7 +635,8 @@ fun ConversationScreen(
                         readOnly = isRecording,
                         placeholder = {
                             val placeholderText = when {
-                                isRecording -> stringResource(R.string.voice_message_recording)
+                                isRecording && recordingMode == RecordingMode.VOICE -> stringResource(R.string.voice_message_recording)
+                                isRecording && recordingMode == RecordingMode.VIDEO_NOTE -> stringResource(R.string.video_note_recording)
                                 text.isEmpty() && !isEditMode -> stringResource(R.string.voice_message_hold_to_record)
                                 else -> stringResource(R.string.conversation_message_hint)
                             }
@@ -583,85 +661,130 @@ fun ConversationScreen(
                             Icon(icon, contentDescription = description)
                         }
                     } else if (!isEditMode) {
-                        val interactionSource = remember { MutableInteractionSource() }
-                        val isPressed by interactionSource.collectIsPressedAsState()
+                        val recordButtonColor by animateColorAsState(
+                            if (isRecording) MaterialTheme.colorScheme.error else LocalContentColor.current,
+                            label = "RecordButtonColor"
+                        )
+                        val coroutineScope = rememberCoroutineScope()
 
-                        LaunchedEffect(isPressed) {
-                            if (isPressed) {
-                                if (recordAudioPermissionState.status.isGranted) {
-                                    performVibration(context)
-                                    isRecording = true
-                                    voiceRecorder.startRecording()
-                                } else {
-                                    recordAudioPermissionState.launchPermissionRequest()
-                                }
-                            } else {
-                                if (isRecording) {
-                                    performVibration(context)
-                                    isRecording = false
-                                    voiceRecorder.stopRecording()?.let { file ->
-                                        val uri = Uri.fromFile(file)
-                                        val fileName = context.getString(R.string.voice_message_filename, SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date()))
-                                        viewModel.sendVoiceMessage(uri, fileName)
-                                        messageSoundPlayer.start()
-                                    }
+                        Box(
+                            modifier = Modifier.pointerInput(recordingMode, cameraPermissionState.status, recordAudioPermissionState.status) {
+                                coroutineScope.launch {
+                                    detectTapGestures(
+                                        onTap = { 
+                                            if (!isRecording) {
+                                                viewModel.switchRecordingMode()
+                                            }
+                                        },
+                                        onLongPress = { 
+                                            performVibration(context)
+                                            if (recordingMode == RecordingMode.VOICE) {
+                                                if (recordAudioPermissionState.status.isGranted) {
+                                                    isRecording = true
+                                                    voiceRecorder.startRecording()
+                                                } else {
+                                                    recordAudioPermissionState.launchPermissionRequest()
+                                                }
+                                            } else {
+                                                val cameraPerm = cameraPermissionState.status.isGranted
+                                                val audioPerm = recordAudioPermissionState.status.isGranted
+                                                if (cameraPerm && audioPerm) {
+                                                    isRecording = true
+                                                    val file = createTempFile("mp4")
+                                                    cameraManager.startRecording(file)
+                                                } else {
+                                                    if (!cameraPerm) cameraPermissionState.launchPermissionRequest()
+                                                    if (!audioPerm) recordAudioPermissionState.launchPermissionRequest()
+                                                }
+                                            }
+                                        },
+                                        onPress = { 
+                                            if (isRecording) {
+                                                performVibration(context)
+                                                isRecording = false
+                                                if (recordingMode == RecordingMode.VOICE) {
+                                                    voiceRecorder.stopRecording()?.let { file ->
+                                                        val uri = Uri.fromFile(file)
+                                                        val fileName = context.getString(R.string.voice_message_filename, SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date()))
+                                                        viewModel.sendVoiceMessage(uri, fileName)
+                                                        messageSoundPlayer.start()
+                                                    }
+                                                } else {
+                                                    cameraManager.stopRecording()
+                                                }
+                                            }
+                                        }
+                                    )
                                 }
                             }
-                        }
-
-                        val micColor by animateColorAsState(
-                            if (isRecording) MaterialTheme.colorScheme.error else LocalContentColor.current,
-                            label = "Mic Color"
-                        )
-
-                        IconButton(
-                            onClick = { /* For accessibility */ },
-                            interactionSource = interactionSource
                         ) {
-                            Icon(
-                                Icons.Default.Mic, 
-                                contentDescription = stringResource(R.string.voice_message_hold_to_record),
-                                tint = micColor
-                            )
+                             Crossfade(targetState = recordingMode, label = "RecordModeIcon") {
+                                when (it) {
+                                    RecordingMode.VOICE -> Icon(
+                                        Icons.Default.Mic, 
+                                        contentDescription = stringResource(R.string.voice_message_hold_to_record),
+                                        tint = recordButtonColor
+                                    )
+                                    RecordingMode.VIDEO_NOTE -> Icon(
+                                        Icons.Default.Videocam, 
+                                        contentDescription = stringResource(R.string.video_note_hold_to_record),
+                                        tint = recordButtonColor
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
         }
     ) { innerPadding ->
-        LazyColumn(
-            state = listState,
-            reverseLayout = true,
-            modifier = Modifier.fillMaxSize().padding(innerPadding)
-        ) {
-            items(uiState.messages) { message ->
-                MessageItem(
-                    message = message, 
-                    isFromCurrentUser = message.senderId == viewModel.currentUserId,
-                    isSelected = selectedMessageIds.contains(message.messageId),
-                    isSelectionMode = isSelectionMode,
-                    onToggleSelection = { viewModel.toggleMessageSelection(it) },
-                    onMediaClick = { messageId -> onNavigateToMedia(chatId, messageId.toString()) },
-                    onFileClick = { fileMessage ->
-                        try {
-                            val file = java.io.File(Uri.parse(fileMessage.text).path!!)
-                            val fileUri = FileProvider.getUriForFile(
-                                context,
-                                context.applicationContext.packageName + ".provider",
-                                file
-                            )
-                            val mimeType = context.contentResolver.getType(fileUri)
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                state = listState,
+                reverseLayout = true,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                items(uiState.messages) { message ->
+                    MessageItem(
+                        message = message, 
+                        isFromCurrentUser = message.senderId == viewModel.currentUserId,
+                        isSelected = selectedMessageIds.contains(message.messageId),
+                        isSelectionMode = isSelectionMode,
+                        onToggleSelection = { viewModel.toggleMessageSelection(it) },
+                        onMediaClick = { messageId -> onNavigateToMedia(chatId, messageId.toString()) },
+                        onFileClick = { fileMessage ->
+                            try {
+                                val file = java.io.File(Uri.parse(fileMessage.text).path!!)
+                                val fileUri = FileProvider.getUriForFile(
+                                    context,
+                                    context.applicationContext.packageName + ".provider",
+                                    file
+                                )
+                                val mimeType = context.contentResolver.getType(fileUri)
 
-                            val intent = Intent(Intent.ACTION_VIEW).apply {
-                                setDataAndType(fileUri, mimeType)
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                val intent = Intent(Intent.ACTION_VIEW).apply {
+                                    setDataAndType(fileUri, mimeType)
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                Toast.makeText(context, context.getString(R.string.error_cannot_open_file), Toast.LENGTH_SHORT).show()
                             }
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            Toast.makeText(context, context.getString(R.string.error_cannot_open_file), Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    onMusicClick = { musicMessageToPlay = it }
+                        },
+                        onMusicClick = { musicMessageToPlay = it }
+                    )
+                }
+            }
+
+            if (isRecordingVideo) {
+                CameraPreview(
+                    modifier = Modifier
+                        .size(200.dp)
+                        .clip(CircleShape)
+                        .align(Alignment.Center),
+                    cameraManager = cameraManager
                 )
             }
         }

@@ -59,6 +59,7 @@ fun ChatItem(chat: ChatUiState, isSelected: Boolean, onItemClick: (Int) -> Unit,
                     MessageType.TEXT -> chat.lastMessage.text
                     MessageType.IMAGE -> stringResource(R.string.chat_media_type_photo)
                     MessageType.VIDEO -> stringResource(R.string.chat_media_type_video)
+                    MessageType.VIDEO_NOTE -> stringResource(R.string.chat_media_type_video_note)
                     MessageType.FILE -> stringResource(R.string.chat_media_type_file)
                     MessageType.MUSIC -> stringResource(R.string.chat_media_type_music)
                     MessageType.VOICE -> stringResource(R.string.chat_media_type_voice)
